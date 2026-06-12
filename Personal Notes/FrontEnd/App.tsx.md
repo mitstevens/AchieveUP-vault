@@ -1,4 +1,4 @@
-this is the *root* of the React app. It decides which page shows for which URL, and wraps everything with the auth system. It is mostly just wiring up other things, *NOT* unique logic. 
+lthis is the *root* of the React app. It decides which page shows for which URL, and wraps everything with the auth system. It is mostly just wiring up other things, *NOT* unique logic. 
 
 # Imports 
 Standard imports at the top, necessary for the file. A lot of things from other pages or components that we need. 
@@ -77,3 +77,44 @@ Because React re renders the entire function on every state change, if you calle
 useEffect simply: 
 run this code when something in the list (\[]) changes. Because we gave it a empty list, nothing will change. So it runs *once* when the page is loaded. Then, when the page gets re rendered, react checks the list to see if anything changed, it didn't, so it does not get re rendered. This allows it to load ONLY on mount / initial use. 
 Because the second effect has selectedCourse within the list, every time that selectedCourse is updated, React will run loadStudentData again, to update the student data. 
+
+### Fetch functions: 
+Many of these fetch functions use the [[async modifier]]. They are functions that the page uses, and update the state, thus why within the page directly. 
+
+**Walk through:**
+name = async (parameter the function takes : type of the parameter) => {the stuff the function does}
+**Example:** 
+``` JavaScript
+const loadStudentData = async (courseId: string) =>
+```
+
+The code is also wrapped in a try block for error handling. 
+
+In some cases, it uses destructuring. Example: 
+``` JavaScript 
+const { instructorAPI } = await import('./services/api');
+const response = await instructorAPI.getCourseStudentAnalytics(courseId);
+```
+The { } means that when it gets sent back the entire object, it only wants to keep the variable with the exact name "instructorAPI", the rest get's discarded. 
+
+### Conditional Rendering: 
+A big block (~500 lines) of if shaped UI. Shows things like a spinner for loading, error boxes for errors, etc. React formatting - used condition && code as a if statement - common react practice. 
+
+Note - There is some commented out code on lines 430-436 
+
+### AppRoutes: 
+Because react is a single-page application, we don't have actual pages like /dashboard anymore, but users would still expect that functionality to be the same. For that reason, we use a router, to ensure the right page is rendered. 
+``` tsx
+<protectedRoute>      {/* This makes sure that the user must be logged in to acces the route */}
+	<Layout>          {/* This adds a navigation bar / page frame */}
+		<Page />      {/* This is the page component itself - calls that component and renders what it returns */}
+	</Layout> 
+</ProtectedRoute> 
+```
+
+### App: 
+App makes sure everything runs within Router, and AuthProvider to provide authentication to every component, as well as enable URL-based navigation. Within that, there is the AppRoutes, which was just covered and manages showing the right component, and Toaster, which manages pop-ups. 
+
+Router connects React to the browser, watches the URL bar and browser history, and broadcasts the current URL to everything. From there, AppRoutes decides based on the URL Router broadcasts what page we should show. That is why AppRoutes is inside of Router. (Router knows where you are, makes no decisions, AppRoutes decides what to show based on Router's information). 
+
+When a element changes, like the Router. It than re-renders along with all of its children components. (Re renders do NOT travel upward, so it doesn't cause AuthProvider to re-render). From there, it checks what changes, and only re draws things that changed (because of the virtual DOM). So if the page changed, but Toaster doesn't change, nothing changes with Toaster, but the new component will re draw. 
