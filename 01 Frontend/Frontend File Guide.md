@@ -18,12 +18,12 @@ Every file in `achieveup-frontend`, what it does, and what it links to. Paths re
 | `public/` | Static HTML shell (`index.html` has the `<div id="root">` React mounts into), favicon, manifest. |
 
 ## `src/` — entry & core
-| File | Purpose |
-|---|---|
-| `index.tsx` | **Entry point.** Renders `<App />` into the DOM. Imports `index.css`. |
-| `index.css` | Global styles + Tailwind `@tailwind` directives. |
-| `App.tsx` | **Heart of the app.** Declares all routes, the `ProtectedRoute` wrapper, and (inline) the entire `StudentProgress` page incl. the student-detail modal and the Sync Now polling logic. |
-| `types/index.ts` | **All shared TypeScript interfaces** (`User`, `SkillMatrix`, `Badge`, `CanvasCourse`, request/response shapes). Read this to learn the data model the frontend expects. |
+| File             | Purpose                                                                                                                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`      | **Entry point.** Renders `<App />` into the DOM. Imports `index.css`.                                                                                                                  |
+| `index.css`      | Global styles + Tailwind `@tailwind` directives.                                                                                                                                       |
+| `App.tsx`        | **Heart of the app.** Declares all routes, the `ProtectedRoute` wrapper, and (inline) the entire `StudentProgress` page incl. the student-detail modal and the Sync Now polling logic. |
+| `types/index.ts` | **All shared TypeScript interfaces** (`User`, `SkillMatrix`, `Badge`, `CanvasCourse`, request/response shapes). Read this to learn the data model the frontend expects.                |
 
 ## `src/contexts/`
 | File | Purpose |

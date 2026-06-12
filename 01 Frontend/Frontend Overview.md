@@ -54,6 +54,7 @@ Three structural rules that make this codebase easy to navigate:
 ⚠️ Quirk: `StudentProgress` (~600 lines) is defined inside `App.tsx` rather than its own file — likely a candidate for refactoring.
 
 ## Where to go next
+- [[App.tsx Walkthrough]] — section-by-section reading companion for `App.tsx`
 - [[Frontend File Guide]] — every file explained
 - [[Flow - Instructor Skill Workflow]] — the workflow these screens implement
 - [[React Concepts]] — the React features this app uses, with examples from this code
