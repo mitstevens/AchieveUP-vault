@@ -118,3 +118,53 @@ App makes sure everything runs within Router, and AuthProvider to provide authen
 Router connects React to the browser, watches the URL bar and browser history, and broadcasts the current URL to everything. From there, AppRoutes decides based on the URL Router broadcasts what page we should show. That is why AppRoutes is inside of Router. (Router knows where you are, makes no decisions, AppRoutes decides what to show based on Router's information). 
 
 When a element changes, like the Router. It than re-renders along with all of its children components. (Re renders do NOT travel upward, so it doesn't cause AuthProvider to re-render). From there, it checks what changes, and only re draws things that changed (because of the virtual DOM). So if the page changed, but Toaster doesn't change, nothing changes with Toaster, but the new component will re draw. 
+
+
+
+
+## Things to fix when converting to a page: 
+  1. The Sync Now button is a mess (lines 218–261)
+  The onClick handler is ~40 lines of inline code with polling logic, toast imports,
+  conditionals, and a setInterval. That should be a named function called handleSyncNow. Inline
+  click handlers should be 1–2 lines. This is the worst thing in the file.
+
+  2. Memory leak / polling — confirmed, but with nuance
+  const interval = setInterval(async () => {
+    polls++;
+    if (polls >= 4) clearInterval(interval);
+    await loadStudentData(selectedCourse);
+  }, 15000);
+  The interval does clear itself after 4 polls — so it won't run forever. The actual problem is
+  that if the user navigates away during that 1-minute window, the interval keeps firing and
+  calls loadStudentData, which calls setStudentData on an unmounted component. React 18 will
+  throw a warning for that, and it wastes network requests. Still a real issue, just not as
+
+3. <a href="..."> instead of <Link> (lines 291, 527, 533)
+  They imported Link from react-router-dom and use it correctly in the table, but then use raw
+  <a> tags for the "Configure Canvas Token," "Assign Skills," and "Manage Skill Matrix" buttons.
+  A raw <a> causes a full page reload — React loses all its state and re-initializes from
+  scratch. That's an actual bug, not just style.
+  
+4. console.log left in on line 105
+console.log('API RESPONSE analyticsData:', analyticsData);
+Debug log in production code. Should be removed.
+
+  5. any types — confirmed, but scope is narrower than I said
+  studentData is actually properly typed as StudentProgressData | null (line 58) — that part is
+  fine. The real any problems are:
+  - Line 56: courses is useState<any[]>
+  - Line 60: selectedStudent is useState<any>
+  - Lines 112, 622: .map((student: any) and .map(([skillName, skillData]: [string, any])
+  callbacks
+
+
+  6. The same calculation done twice (lines 323, 330)
+  Math.round(studentData.students.reduce(...) / studentData.students.length)
+  Computed once to show in the icon, then again to show as text in the same card. Should be one
+  variable.
+
+  7. The modal (lines 542–669) is 130 lines of JSX inline
+  At that size it should be its own <StudentDetailModal> component. It has no logic coupling to
+  the parent that would prevent it — you'd just pass student, onClose as props.
+
+
