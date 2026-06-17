@@ -37,7 +37,60 @@ const isInstructor = user?.canvasTokenType === 'instructor';
 Set isInstructor as a variable. If there is a user, check whether the canvasTokenType is exactly "instructor" (returns true/false). if there is no user, that returns undefined, in which case it does not === "instructor" and returns false. 
 
 ### generateMockActivity: 
-This function generates face activity. It is not real data pulled from the API or database. It is a placeholder. It should **NOT EXIST in the final production code**. Currently this only shows if there is no real data. However, it is built in later to show in any case no student data is present, which could be confusing. 
+This function is sort of initializing activity information. It is not pretending to show fake data as the name might suggest, but adding next-step suggestions based on where the instructor is in their setup process "Set up Canvas Integration" etc. More than being "generateMockActivity" is generating a contextual to-do list based on current state. 
+
+We create **activities**, which is a Activity array initialized to an empty array. Activity was a interface defined above, and conditionally we **push** to it, which is a JavaScript way to add an item to the end of a array. 
+
+**If you have 0 courses:** We set description to connect canvas account to load courses. 
+**If you have !== 0 courses and we have === 0 matrices:** We set description to "You have x courses loaded. Create a skill matrix to get started" 
+**Else:** Set description to "Successfully created x skill matrices"
+**If matricesCount > 0:** Set description "Use AI to automatically map your quiz questions to the skills you've defined"
+**Else:** Set description to "Once you create a skill matrix, you can automatically map questions to skills". 
+**Push:** Regardless of everything else, always push "progress" type with description "Track student skill development as they complete Canvas assignments"
+
+**NOTES:** There are **random time stamps** that don't **appear** to make **any sense**. It sets things to things like 2, 5, 10, 15, and 30 minutes before they were created, instead of the current time. 
+
+**Claude code explanation of how to FIX:** 
+![[Screenshot from 2026-06-17 14-03-24.png]]
+
+### loadDashboardData: 
+This is an async function, using [[useCallback]]. It goes from lines 135-302  and is quite lengthy. 
+
+If instructor: Load and set the course information, and load and set the totalMatrices count. 
+Set the actualStudentCount to 0 or accurate student count based on the dashboardresponse. 
+**If students === 0 and data.length > 0:** THIS IS THE WORST THING I HAVE SEEN IN THIS FILE. We use a hash to create a random (but consistent amount the same courses) number of students, and show that number to the instructor. It is literally trying to create a random number to show them. CLEARLY AI WRITTEN SLOP. This **SHOULD BE REMOVED** 
+IF the previous code errors, we run it all again (the hashing algorithm and fake student number) and submit that. **SO IF THE PREVIOUS BAD CODE ERRORS ANYWHERE, WE RUN MORE BAD CODE**. This is terrible, duplicating BAD code, it must be removed. 
+We then have an catch for if the API fails, we set to 0's. 
+
+If not an instructor, we now enter this else block, which is for loading student data. We call the instructor API though, which obviously won't work. We mostly set things to 0s. There is not much going on. **This should be removed:** We are calling a instructor API to set student data which makes no sense. Students should have their own dashboard page, it shouldn't be here within the instructor one. This makes no sense. 
+
+Finish with some error handling, fallback sets to 0. Than a finally setLoading to false. 
+
+**useEffect:** We call useEffect on loadDashboardData - Because loadDashboardData is using [[useCallback]], it only actually changes reference if one of it's dependencies changes, which is the only thing that triggers it to re update. 
+
+### getGreeting: 
+Gets a string greeting message based on time, Good morning/afternoon/evening. 
+
+### getTimeAgo: 
+Calculates based on a time given, and the current time, how long ago the time given was. It returns a string: if less than a minute ago "Just now", if less than 60 minutes ago "x min ago", if less than 1440 minutes ago "x hr ago", else "x day ago". 
+
+### workflowSteps: 
+This created a array of interface type WorkflowStep[] with 3 entries. It reads from skillMatricesCount which is kept in state, so though it does update every re render, it will show the proper information. This is like setup information that is being shown. 
+
+### instructorQuickActions: 
+A static array of 4 objects matching the QuickAction[] interface. Shows essentially navigation cards that show in the "essential tools" section of the instructor dashboard. Static, no dynamic values, no state, no API calls. A hardcoded list that gets looped over in the JSX to render the cards. **Note** Since this has no need for state or anything within the component, it could be put outside the component so it only renders once on load, and is not constantly being rebuilt. Overall, it is a minor impact, not big. 
+
+### studentQuickActions: 
+Pretty much same as instructor, but with only 2 instead of 4. This should **get removed from the instructor dashboard** and built on it's own page. 
+
+### JSX code: 
+Not spending much time here, pretty tedious to read through. Some issues Claude pointed out: 
+1. On line 494 it uses `<a>` tag instead of `<Link` - this causes the page to essentially full reload and lose state. Bad practice for react, could cause bugs with state being lost. 
+2. The instructorState.recentActivity is used for instructors and students. The student portal isn't really bad, so this isn't an issue, but should likely be removed. 
+3. The stats cards are hardcoded. Instead of being driven by an array, like quickActions, the instructor cards and student cards are each written out manually as individual `<Card>` components. If you ever wanted to add or change a card, you would have to do it manually. Just bad practice, not a bug. 
+4. It uses key={index} throughout - it is better practice to use key = {id} so that if the positioning of things got changed, it still renders correctly. Again, not a bug, but bad practice. 
+
+
 
 
 ### Issues presented by Claude Code to investigate: 

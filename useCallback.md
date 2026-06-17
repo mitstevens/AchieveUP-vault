@@ -1,0 +1,4 @@
+useCallback is a react [[Hook]] which memoizes a function definition between component re-renders. (Basically keeps the function the same, without re-creating it between re-renders). 
+
+### One main reason to use this hook: 
+**The function is a Dependency in Other Hooks:** If the function is included in the dependency array of a useEffect, useMemo, or another useCallback, it could cause an infinite loop when NOT using useCallback on the function. The function would get created, which is an update, causing useEffect to trigger and re run that component. That causes a re-render of the page, which cases the function to be re-created, again updating the effect, and causing a infinite loop. Keeping the function cached between re-renders avoids this infinite loop. 
